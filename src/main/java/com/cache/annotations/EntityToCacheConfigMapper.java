@@ -70,7 +70,7 @@ public class EntityToCacheConfigMapper {
         Class<?> keyClass = cacheConfig.getKeyClazz();
         if(keyClass == null)
             return;
-        if (!keyClass.isAnnotationPresent(CacheKey.class)) {
+        if (!keyClass.isAnnotationPresent(CacheKeyClass.class)) {
             throw new CacheSerializationException("The class " + keyClass.getSimpleName() + " is not annotated with CacheKey");
         }
         Map<String, Class<?>> keyFieldNameAndTypeMap  = new HashMap<>();

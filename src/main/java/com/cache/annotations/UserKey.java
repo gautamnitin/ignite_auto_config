@@ -1,6 +1,6 @@
 package com.cache.annotations;
 
-@CacheKey
+@CacheKeyClass
 public class UserKey {
     private String name;
 }

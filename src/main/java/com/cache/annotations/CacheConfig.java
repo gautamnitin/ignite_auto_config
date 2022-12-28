@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.ignite.cache.QueryEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -24,4 +27,13 @@ public class CacheConfig {
     private Map<String, Class<?>> fieldNameAndTypeMap;
     private Map<String, Class<?>> keyFieldNameAndTypeMap;
     private List<String> queryFields;
+
+    public List<QueryEntity> getQueryEntities() {
+        List<QueryEntity> queryEntities = queryFields.stream().map(s -> {
+            Class<?> fieldClassType = fieldNameAndTypeMap.get(s);
+            return new QueryEntity(keyClazz, entityClazz);
+        }).collect(Collectors.toList());
+
+        return queryEntities;
+    }
 }

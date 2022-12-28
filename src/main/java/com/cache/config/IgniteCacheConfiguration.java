@@ -1,5 +1,7 @@
 package com.cache.config;
 
+import com.cache.annotations.CacheConfig;
+import com.cache.annotations.EntityToCacheConfigMapper;
 import com.cache.entity.Organization;
 import com.cache.entity.Person;
 import org.apache.ignite.Ignite;
@@ -12,10 +14,12 @@ import org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder;
 import org.apache.ignite.springdata22.repository.config.EnableIgniteRepositories;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,6 +27,8 @@ import java.util.List;
 @EnableIgniteRepositories(value = "com.cache.*")
 public class IgniteCacheConfiguration {
 
+    @Value("${iginite.cacheable.enity}")
+    private String[] cacheableEntities;
     @Bean
     public Ignite igniteInstance() {
         return Ignition.start(igniteConfiguration());
@@ -62,11 +68,11 @@ public class IgniteCacheConfiguration {
     @Bean(name = "cacheConfiguration")
     public CacheConfiguration[] cacheConfiguration() {
         List<CacheConfiguration> cacheConfigurations = new ArrayList<>();
-            CacheConfiguration cacheConfiguration = new CacheConfiguration();
+            /*CacheConfiguration cacheConfiguration = new CacheConfiguration();
             cacheConfiguration.setAtomicityMode(CacheAtomicityMode.ATOMIC);
             cacheConfiguration.setCacheMode(CacheMode.REPLICATED);
             cacheConfiguration.setName("employee");
-            cacheConfiguration.setStatisticsEnabled(true);
+            cacheConfiguration.setStatisticsEnabled(true);*/
 
             CacheConfiguration cacheConfiguration1 = new CacheConfiguration();
             cacheConfiguration1.setAtomicityMode(CacheAtomicityMode.ATOMIC);
@@ -86,9 +92,34 @@ public class IgniteCacheConfiguration {
 
             cacheConfigurations.add(ccfg);
             cacheConfigurations.add(orgCacheCfg);
-            cacheConfigurations.add(cacheConfiguration);
+            //cacheConfigurations.add(cacheConfiguration);
             cacheConfigurations.add(cacheConfiguration1);
+            cacheConfigurations.addAll(getAutoConfigurationBasedOnEntities());
 
         return cacheConfigurations.toArray(new CacheConfiguration[cacheConfigurations.size()]);
+    }
+
+    private List<CacheConfiguration> getAutoConfigurationBasedOnEntities() {
+        List<CacheConfiguration> cacheConfigurations = new ArrayList<>();
+        EntityToCacheConfigMapper mapper = new EntityToCacheConfigMapper();
+        Arrays.stream(cacheableEntities).forEach(entity -> {
+            try {
+                Class<?> entityClazz = Class.forName("com.cache.entity." + entity);
+                CacheConfig cacheConfig = mapper.convertToCacheConfig(entityClazz);
+                cacheConfigurations.add(getCacheConfiguration(entityClazz, cacheConfig));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        return cacheConfigurations;
+    }
+
+    private CacheConfiguration getCacheConfiguration(Class<?> entityClazz, CacheConfig cacheConfig) {
+        CacheConfiguration<?, ?> entityCacheCfg = new CacheConfiguration<>(cacheConfig.getCacheName());
+        entityCacheCfg.setCacheMode(CacheMode.REPLICATED); // Default.
+        entityCacheCfg.setIndexedTypes(cacheConfig.getKeyClazz(), cacheConfig.getEntityClazz());
+        return entityCacheCfg;
     }
 }

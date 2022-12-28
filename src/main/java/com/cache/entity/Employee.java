@@ -1,38 +1,28 @@
 package com.cache.entity;
 
+import com.cache.annotations.CacheField;
+import com.cache.annotations.IgniteCacheable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 
-public class Employee implements Serializable {
-    private static final long serialVersionUID = -2974414641088735500L;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@IgniteCacheable(cacheName = "EmployeeCache", tableName = "EMPLOYEE", keyClazz = EmployeeKey.class)
+public class Employee implements CacheEntity<EmployeeKey> {
+
+    @CacheField(isQueryField = true, dbName = "ID")
     private String id;
+    @CacheField(isQueryField = true, dbName = "name")
     private String name;
 
-    public Employee(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @Override
-    public String toString() {
-        return "Employee{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                '}';
+    public EmployeeKey getKey() {
+        return EmployeeKey.builder().name(name).build();
     }
 }
