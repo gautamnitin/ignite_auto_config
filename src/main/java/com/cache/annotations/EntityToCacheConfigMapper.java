@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class EntityToCacheConfigMapper {
 
-    public CacheConfig convertToCacheConfig(Class<?> entityClass) throws JsonSerializationException {
+    public CacheConfig convertToCacheConfig(Class<?> entityClass)  {
         try {
             checkIfCacheable(entityClass);
             initializeObject(entityClass);
@@ -98,9 +98,11 @@ public class EntityToCacheConfigMapper {
         }
     }
 
+    /*
     private String getKey(Field field) {
-        String value = field.getAnnotation(JsonElement.class)
+        String value = field.getAnnotation(CacheKeyClass.class)
                 .key();
         return value.isEmpty() ? field.getName() : value;
     }
+    */
 }
